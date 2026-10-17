@@ -1,0 +1,476 @@
+<!doctype html><html><head><meta charset=utf8><meta name=viewport content="width=device-width,initial-scale=1,viewport-fit=cover"><style>:root{color-scheme:light;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}html{scroll-padding-top:env(safe-area-inset-top,0px)}body{margin:0;padding:0;font:14px -apple-system,BlinkMacSystemFont,sans-serif;background:#fff;color:#000}img{max-width:100%}[hidden]:not([hidden=until-found i]){display:none!important}</style></head><body>
+<title>Cache-Aside Architecture</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<style>
+  /* Layout: centered single column, diagram above decision log */
+  :root {
+    --bg: #0a0a0f;
+    --surface: #13131a;
+    --border: #2a2a3a;
+    --fg: #e8e8f0;
+    --fg-muted: #8888aa;
+    --accent: #7B61FF;
+    --accent-dim: #3d3170;
+    --hit: #22c55e;
+    --miss: #f59e0b;
+    --db: #38bdf8;
+    --font-display: 'Bebas Neue', Impact, sans-serif;
+    --font-body: 'DM Sans', system-ui, sans-serif;
+    --font-mono: 'JetBrains Mono', 'Fira Code', monospace;
+    color-scheme: dark;
+  }
+
+  @media (prefers-color-scheme: light) {
+    :root:not([data-theme="dark"]) {
+      --bg: #f4f4f8;
+      --surface: #ffffff;
+      --border: #d0d0e0;
+      --fg: #111118;
+      --fg-muted: #55556a;
+      --accent: #5b3fd4;
+      --accent-dim: #ddd8ff;
+      --hit: #16a34a;
+      --miss: #d97706;
+      --db: #0284c7;
+      color-scheme: light;
+    }
+  }
+  :root[data-theme="light"] {
+    --bg: #f4f4f8;
+    --surface: #ffffff;
+    --border: #d0d0e0;
+    --fg: #111118;
+    --fg-muted: #55556a;
+    --accent: #5b3fd4;
+    --accent-dim: #ddd8ff;
+    --hit: #16a34a;
+    --miss: #d97706;
+    --db: #0284c7;
+    color-scheme: light;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    background: var(--bg);
+    color: var(--fg);
+    font-family: var(--font-body);
+    font-size: 15px;
+    line-height: 1.6;
+    padding-left: max(16px, env(safe-area-inset-left, 0px));
+    padding-right: max(16px, env(safe-area-inset-right, 0px));
+    padding-block: 40px;
+  }
+
+  .page {
+    max-width: 860px;
+    margin: 0 auto;
+    display: flex;
+    flex-direction: column;
+    gap: 48px;
+  }
+
+  .page-header {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+  }
+
+  .eyebrow {
+    font-family: var(--font-mono);
+    font-size: 11px;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: var(--accent);
+  }
+
+  h1 {
+    font-family: var(--font-display);
+    font-size: clamp(28px, 5vw, 42px);
+    letter-spacing: 0.04em;
+    color: var(--fg);
+    text-wrap: balance;
+    line-height: 1.1;
+  }
+
+  .subtitle {
+    color: var(--fg-muted);
+    font-size: 14px;
+    max-width: 560px;
+  }
+
+  /* Diagram card */
+  .diagram-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 32px 24px 24px;
+    overflow-x: auto;
+  }
+
+  figure { margin: 0; }
+
+  figcaption {
+    margin-top: 20px;
+    font-size: 13px;
+    color: var(--fg-muted);
+    display: flex;
+    gap: 24px;
+    flex-wrap: wrap;
+  }
+
+  .legend-item {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
+
+  .legend-dot {
+    width: 10px;
+    height: 10px;
+    border-radius: 50%;
+    flex-shrink: 0;
+  }
+
+  /* Flow paths section */
+  .flows {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 16px;
+  }
+
+  @media (max-width: 560px) {
+    .flows { grid-template-columns: 1fr; }
+  }
+
+  .flow-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 20px;
+  }
+
+  .flow-card h3 {
+    font-family: var(--font-mono);
+    font-size: 11px;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    margin-bottom: 12px;
+  }
+
+  .flow-card.hit h3 { color: var(--hit); }
+  .flow-card.miss h3 { color: var(--miss); }
+
+  .flow-steps {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    list-style: none;
+    counter-reset: step;
+  }
+
+  .flow-steps li {
+    counter-increment: step;
+    display: flex;
+    gap: 10px;
+    font-size: 13px;
+    color: var(--fg-muted);
+    align-items: flex-start;
+  }
+
+  .flow-steps li::before {
+    content: counter(step);
+    font-family: var(--font-mono);
+    font-size: 11px;
+    color: var(--fg-muted);
+    background: var(--border);
+    border-radius: 3px;
+    min-width: 20px;
+    height: 20px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    margin-top: 1px;
+  }
+
+  .flow-steps li span { color: var(--fg); }
+
+  /* Decision log */
+  .section-title {
+    font-family: var(--font-display);
+    font-size: 22px;
+    letter-spacing: 0.05em;
+    color: var(--fg);
+    margin-bottom: 16px;
+  }
+
+  .decision-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 13px;
+    overflow-x: auto;
+    display: block;
+  }
+
+  .decision-table th {
+    text-align: left;
+    font-family: var(--font-mono);
+    font-size: 10px;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--fg-muted);
+    padding: 8px 12px;
+    border-bottom: 1px solid var(--border);
+    white-space: nowrap;
+  }
+
+  .decision-table td {
+    padding: 12px 12px;
+    border-bottom: 1px solid var(--border);
+    vertical-align: top;
+    color: var(--fg);
+    line-height: 1.5;
+  }
+
+  .decision-table tr:last-child td { border-bottom: none; }
+
+  .decision-table td:first-child {
+    font-family: var(--font-mono);
+    font-size: 12px;
+    color: var(--accent);
+    white-space: nowrap;
+  }
+
+  .tag {
+    display: inline-block;
+    font-family: var(--font-mono);
+    font-size: 10px;
+    padding: 2px 7px;
+    border-radius: 3px;
+    margin-right: 4px;
+  }
+
+  .tag-why { background: var(--accent-dim); color: var(--accent); }
+  .tag-tradeoff { background: rgba(245,158,11,0.15); color: var(--miss); }
+</style>
+
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Sans:wght@400;500&family=JetBrains+Mono:wght@400;500&display=swap">
+
+<div class="page">
+
+  <header class="page-header">
+    <span class="eyebrow">Module 01 · Databases</span>
+    <h1>Cache-Aside Architecture</h1>
+    <p class="subtitle">How a read request moves through ElastiCache Redis, DynamoDB, and Aurora Serverless v2 — and what changes when the cache is warm vs. cold.</p>
+  </header>
+
+  <div class="diagram-card">
+    <figure>
+      <svg viewBox="0 0 780 340" role="img" aria-label="Cache-aside pattern showing a client request hitting ElastiCache first, falling back to DynamoDB on a miss, with Aurora as the relational source of truth" style="max-width:100%;height:auto;display:block;">
+        <defs>
+          <!-- Arrow markers -->
+          <marker id="arr-default" markerWidth="8" markerHeight="8" refX="6" refY="3" orient="auto">
+            <polygon points="0 0, 7 3, 0 6" fill="currentColor" opacity="0.5"/>
+          </marker>
+          <marker id="arr-hit" markerWidth="8" markerHeight="8" refX="6" refY="3" orient="auto">
+            <polygon points="0 0, 7 3, 0 6" fill="#22c55e"/>
+          </marker>
+          <marker id="arr-miss" markerWidth="8" markerHeight="8" refX="6" refY="3" orient="auto">
+            <polygon points="0 0, 7 3, 0 6" fill="#f59e0b"/>
+          </marker>
+          <marker id="arr-blue" markerWidth="8" markerHeight="8" refX="6" refY="3" orient="auto">
+            <polygon points="0 0, 7 3, 0 6" fill="#38bdf8"/>
+          </marker>
+          <marker id="arr-accent" markerWidth="8" markerHeight="8" refX="6" refY="3" orient="auto">
+            <polygon points="0 0, 7 3, 0 6" fill="#7B61FF"/>
+          </marker>
+        </defs>
+
+        <!-- ── CLIENT ── -->
+        <rect x="20" y="135" width="100" height="52" rx="6" fill="none" stroke="currentColor" stroke-opacity="0.3" stroke-width="1.5"/>
+        <text x="70" y="157" text-anchor="middle" font-family="'Bebas Neue',sans-serif" font-size="13" fill="currentColor" opacity="0.9" letter-spacing="1">CLIENT</text>
+        <text x="70" y="174" text-anchor="middle" font-family="'JetBrains Mono',monospace" font-size="9" fill="currentColor" opacity="0.45">API / App</text>
+
+        <!-- ── ELASTICACHE ── -->
+        <rect x="195" y="110" width="130" height="100" rx="6" fill="#7B61FF" fill-opacity="0.08" stroke="#7B61FF" stroke-opacity="0.5" stroke-width="1.5"/>
+        <text x="260" y="136" text-anchor="middle" font-family="'Bebas Neue',sans-serif" font-size="13" fill="#7B61FF" letter-spacing="1">ELASTICACHE</text>
+        <text x="260" y="154" text-anchor="middle" font-family="'JetBrains Mono',monospace" font-size="9" fill="#7B61FF" opacity="0.7">Redis OSS</text>
+        <text x="260" y="175" text-anchor="middle" font-family="'JetBrains Mono',monospace" font-size="9" fill="currentColor" opacity="0.45">TTL: 5 min</text>
+        <text x="260" y="191" text-anchor="middle" font-family="'JetBrains Mono',monospace" font-size="9" fill="currentColor" opacity="0.45">key: productId</text>
+
+        <!-- ── DYNAMODB ── -->
+        <rect x="400" y="50" width="130" height="90" rx="6" fill="#38bdf8" fill-opacity="0.07" stroke="#38bdf8" stroke-opacity="0.5" stroke-width="1.5"/>
+        <text x="465" y="76" text-anchor="middle" font-family="'Bebas Neue',sans-serif" font-size="13" fill="#38bdf8" letter-spacing="1">DYNAMODB</text>
+        <text x="465" y="94" text-anchor="middle" font-family="'JetBrains Mono',monospace" font-size="9" fill="#38bdf8" opacity="0.7">NoSQL · Free tier</text>
+        <text x="465" y="113" text-anchor="middle" font-family="'JetBrains Mono',monospace" font-size="9" fill="currentColor" opacity="0.45">PK: productId</text>
+        <text x="465" y="129" text-anchor="middle" font-family="'JetBrains Mono',monospace" font-size="9" fill="currentColor" opacity="0.45">~single-digit ms</text>
+
+        <!-- ── AURORA ── -->
+        <rect x="400" y="200" width="130" height="90" rx="6" fill="#38bdf8" fill-opacity="0.04" stroke="#38bdf8" stroke-opacity="0.25" stroke-width="1.5" stroke-dasharray="5,3"/>
+        <text x="465" y="226" text-anchor="middle" font-family="'Bebas Neue',sans-serif" font-size="13" fill="#38bdf8" opacity="0.6" letter-spacing="1">AURORA</text>
+        <text x="465" y="244" text-anchor="middle" font-family="'JetBrains Mono',monospace" font-size="9" fill="#38bdf8" opacity="0.45">Serverless v2</text>
+        <text x="465" y="263" text-anchor="middle" font-family="'JetBrains Mono',monospace" font-size="9" fill="currentColor" opacity="0.35">Relational source</text>
+        <text x="465" y="279" text-anchor="middle" font-family="'JetBrains Mono',monospace" font-size="9" fill="currentColor" opacity="0.35">of truth (deferred)</text>
+
+        <!-- ── ARROWS ── -->
+
+        <!-- Client → Cache: read request -->
+        <line x1="120" y1="161" x2="192" y2="161" stroke="currentColor" stroke-opacity="0.4" stroke-width="1.5" marker-end="url(#arr-default)"/>
+        <text x="156" y="153" text-anchor="middle" font-family="'JetBrains Mono',monospace" font-size="9" fill="currentColor" opacity="0.45">read</text>
+
+        <!-- Cache HIT → Client (green, curves back below) -->
+        <path d="M 195 185 Q 155 220 120 178" fill="none" stroke="#22c55e" stroke-width="1.5" stroke-dasharray="none" marker-end="url(#arr-hit)"/>
+        <text x="143" y="214" text-anchor="middle" font-family="'JetBrains Mono',monospace" font-size="9" fill="#22c55e">HIT → return</text>
+
+        <!-- Cache MISS → DynamoDB -->
+        <line x1="325" y1="145" x2="397" y2="112" stroke="#f59e0b" stroke-width="1.5" stroke-dasharray="5,3" marker-end="url(#arr-miss)"/>
+        <text x="368" y="122" text-anchor="middle" font-family="'JetBrains Mono',monospace" font-size="9" fill="#f59e0b">MISS</text>
+
+        <!-- DynamoDB → Cache: populate -->
+        <line x1="400" y1="118" x2="328" y2="148" stroke="#38bdf8" stroke-width="1.5" marker-end="url(#arr-blue)"/>
+        <text x="372" y="146" text-anchor="middle" font-family="'JetBrains Mono',monospace" font-size="9" fill="#38bdf8">populate</text>
+
+        <!-- DynamoDB → Client (return after miss, via cache) -->
+        <path d="M 400 95 Q 340 60 195 140" fill="none" stroke="#22c55e" stroke-width="1.2" stroke-dasharray="4,3" marker-end="url(#arr-hit)"/>
+        <text x="290" y="68" text-anchor="middle" font-family="'JetBrains Mono',monospace" font-size="9" fill="#22c55e">return + cache write</text>
+
+        <!-- Aurora ↔ DynamoDB: sync (dashed, dim) -->
+        <line x1="465" y1="200" x2="465" y2="143" stroke="#38bdf8" stroke-width="1" stroke-opacity="0.3" stroke-dasharray="4,4" marker-end="url(#arr-blue)"/>
+        <text x="510" y="175" text-anchor="middle" font-family="'JetBrains Mono',monospace" font-size="9" fill="currentColor" opacity="0.3">future sync</text>
+
+        <!-- ── PATH LABELS ── -->
+        <!-- HIT badge -->
+        <rect x="590" y="118" width="44" height="18" rx="3" fill="#22c55e" fill-opacity="0.15"/>
+        <text x="612" y="131" text-anchor="middle" font-family="'JetBrains Mono',monospace" font-size="9" fill="#22c55e" letter-spacing="0.05em">WARM</text>
+
+        <!-- MISS badge -->
+        <rect x="590" y="148" width="44" height="18" rx="3" fill="#f59e0b" fill-opacity="0.12"/>
+        <text x="612" y="161" text-anchor="middle" font-family="'JetBrains Mono',monospace" font-size="9" fill="#f59e0b" letter-spacing="0.05em">COLD</text>
+
+        <!-- Warm path annotation -->
+        <text x="612" y="143" text-anchor="middle" font-family="'JetBrains Mono',monospace" font-size="8" fill="currentColor" opacity="0.35">~sub-ms</text>
+        <!-- Cold path annotation -->
+        <text x="612" y="173" text-anchor="middle" font-family="'JetBrains Mono',monospace" font-size="8" fill="currentColor" opacity="0.35">~5–10ms</text>
+
+        <!-- Hop count annotation -->
+        <text x="612" y="205" text-anchor="middle" font-family="'JetBrains Mono',monospace" font-size="8" fill="currentColor" opacity="0.3">1 hop warm</text>
+        <text x="612" y="217" text-anchor="middle" font-family="'JetBrains Mono',monospace" font-size="8" fill="currentColor" opacity="0.3">3 hops cold</text>
+
+        <!-- ── COMPONENT COUNT ── -->
+        <text x="20" y="320" font-family="'JetBrains Mono',monospace" font-size="9" fill="currentColor" opacity="0.3">Module 01 · AWS Portfolio · Eliakim Israel</text>
+      </svg>
+
+      <figcaption>
+        <span class="legend-item">
+          <span class="legend-dot" style="background:#22c55e"></span>
+          Cache hit path (warm) — 1 hop, sub-millisecond
+        </span>
+        <span class="legend-item">
+          <span class="legend-dot" style="background:#f59e0b"></span>
+          Cache miss path (cold) — 3 hops, DynamoDB lookup + cache populate
+        </span>
+        <span class="legend-item">
+          <span class="legend-dot" style="background:#38bdf8; opacity:0.4"></span>
+          Aurora — deferred, relational source of truth (dedicated session)
+        </span>
+      </figcaption>
+    </figure>
+  </div>
+
+  <!-- Flow walkthrough -->
+  <div>
+    <div class="section-title">Request Flow</div>
+    <div class="flows">
+      <div class="flow-card hit">
+        <h3>Cache Hit (warm path)</h3>
+        <ol class="flow-steps">
+          <li><span>Client sends read for <code>productId</code></span></li>
+          <li><span>ElastiCache Redis checks key — found</span></li>
+          <li><span>Return cached value immediately</span></li>
+          <li><span>DynamoDB never touched</span></li>
+        </ol>
+      </div>
+      <div class="flow-card miss">
+        <h3>Cache Miss (cold path)</h3>
+        <ol class="flow-steps">
+          <li><span>Client sends read for <code>productId</code></span></li>
+          <li><span>ElastiCache Redis checks key — not found (TTL expired or first request)</span></li>
+          <li><span>Application reads from DynamoDB</span></li>
+          <li><span>Application writes result back to cache with TTL</span></li>
+          <li><span>Return value to client</span></li>
+        </ol>
+      </div>
+    </div>
+  </div>
+
+  <!-- Decision log -->
+  <div>
+    <div class="section-title">Decision Log</div>
+    <div style="overflow-x:auto;">
+      <table class="decision-table">
+        <thead>
+          <tr>
+            <th>Decision</th>
+            <th>Choice</th>
+            <th>Reasoning / Trade-off</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>Cache pattern</td>
+            <td>Cache-aside (lazy loading)</td>
+            <td>
+              <span class="tag tag-why">WHY</span> Application controls cache population — only data actually requested gets cached. No wasted cache memory on cold data.<br>
+              <span class="tag tag-tradeoff">TRADE-OFF</span> First request always pays the miss penalty. Write-through would keep cache warmer but adds write complexity.
+            </td>
+          </tr>
+          <tr>
+            <td>Cache store</td>
+            <td>ElastiCache Redis OSS Serverless</td>
+            <td>
+              <span class="tag tag-why">WHY</span> Managed Redis with no cluster sizing decisions. Scales to zero when idle — no cost between sessions.<br>
+              <span class="tag tag-tradeoff">TRADE-OFF</span> Serverless has higher per-request cost at sustained load vs. a provisioned cluster. Acceptable for portfolio/low-traffic use.
+            </td>
+          </tr>
+          <tr>
+            <td>Primary data store</td>
+            <td>DynamoDB (free tier)</td>
+            <td>
+              <span class="tag tag-why">WHY</span> Single-digit millisecond reads, no server management, free tier covers portfolio workload. Partition key on <code>productId</code> enables direct key lookups that match the cache pattern exactly.<br>
+              <span class="tag tag-tradeoff">TRADE-OFF</span> No joins. Complex relational queries require Aurora. Chosen intentionally — product catalog is document-shaped, not relational.
+            </td>
+          </tr>
+          <tr>
+            <td>Relational store</td>
+            <td>Aurora Serverless v2 (deferred)</td>
+            <td>
+              <span class="tag tag-why">WHY</span> Needed for relational workloads (orders, user accounts) that DynamoDB handles poorly. Serverless v2 scales to zero ACUs when idle.<br>
+              <span class="tag tag-tradeoff">TRADE-OFF</span> ~$0.20/session cost to spin up. Deferred to dedicated session to control spend and document the Aurora-specific setup separately.
+            </td>
+          </tr>
+          <tr>
+            <td>TTL on cache keys</td>
+            <td>5 minutes</td>
+            <td>
+              <span class="tag tag-why">WHY</span> Product catalog data is mostly static. 5 min balances freshness vs. cache hit rate for a demonstration workload.<br>
+              <span class="tag tag-tradeoff">TRADE-OFF</span> Stale reads possible within the TTL window. Production systems would tune per data type or use explicit invalidation on writes.
+            </td>
+          </tr>
+          <tr>
+            <td>Cost control</td>
+            <td>Delete ElastiCache after each session</td>
+            <td>
+              <span class="tag tag-why">WHY</span> Serverless Redis still incurs idle cost (~$0.50–2/mo) even with no traffic. DynamoDB and S3 stay within free tier.<br>
+              <span class="tag tag-tradeoff">TRADE-OFF</span> Cluster must be recreated each session. Acceptable in a portfolio context; production clusters run continuously.
+            </td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+</div>
+
+</body></html>
