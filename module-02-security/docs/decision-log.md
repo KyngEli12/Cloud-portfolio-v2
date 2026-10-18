@@ -50,3 +50,19 @@ This log captures the key architectural decisions made while designing a least-p
 **Why:** Accidental deletions are irreversible without versioning. An explicit deny blocks it for everyone, including future admins.
 **Trade-off:** Cleanup operations require a deliberate policy change — intentional friction that forces review before deletion.
 **Tag:** Security
+
+## KMS & Secrets Manager (2026-10-18)
+
+| # | Decision | Rationale |
+|---|----------|-----------|
+| 7 | Customer-managed KMS key (CMK) over AWS-managed | Full key policy control, rotation control, cross-service reuse |
+| 8 | DynamoDB encrypted with CMK at rest | Satisfies compliance; key deletion revokes all data access |
+| 9 | Secrets Manager secret encrypted with same CMK | Single key to audit; automatic rotation hooks available |
+
+## GuardDuty + Auto-Remediation (2026-10-18)
+
+| # | Decision | Rationale |
+|---|----------|-----------|
+| 10 | GuardDuty publishing frequency: 15 min | Balance between cost and detection latency |
+| 11 | EventBridge rule on all GuardDuty findings | Decouples detection from response; easy to add more targets |
+| 12 | Lambda attaches AWSDenyAll on compromised IAM user | Immediate blast-radius containment; auditable via CloudTrail |
