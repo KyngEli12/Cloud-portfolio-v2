@@ -1,0 +1,412 @@
+<!doctype html><html><head><meta charset=utf8><meta name=viewport content="width=device-width,initial-scale=1,viewport-fit=cover"><style>:root{color-scheme:light;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}html{scroll-padding-top:env(safe-area-inset-top,0px)}body{margin:0;padding:0;font:14px -apple-system,BlinkMacSystemFont,sans-serif;background:#fff;color:#000}img{max-width:100%}[hidden]:not([hidden=until-found i]){display:none!important}</style></head><body>
+<title>IAM Least-Privilege Architecture</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;600&family=IBM+Plex+Sans:wght@400;500;600&display=swap">
+
+<style>
+  /* Layout: single-column narrative — header, diagram, walkthrough cards, decision log */
+  :root {
+    --bg: #f7f8fa;
+    --surface: #ffffff;
+    --border: #e2e5eb;
+    --fg: #1a1d24;
+    --fg-muted: #5a6075;
+    --accent: #2563eb;
+    --accent-subtle: #eff4ff;
+    --green: #16a34a;
+    --green-subtle: #f0fdf4;
+    --amber: #d97706;
+    --amber-subtle: #fffbeb;
+    --red: #dc2626;
+    --red-subtle: #fef2f2;
+    --font-sans: 'IBM Plex Sans', system-ui, sans-serif;
+    --font-mono: 'IBM Plex Mono', monospace;
+  }
+
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      --bg: #0f1117;
+      --surface: #181c27;
+      --border: #272d3d;
+      --fg: #e8eaf0;
+      --fg-muted: #8b91a8;
+      --accent: #4f8ef7;
+      --accent-subtle: #1a2340;
+      --green: #34d058;
+      --green-subtle: #0d2818;
+      --amber: #fbbf24;
+      --amber-subtle: #241a00;
+      --red: #f87171;
+      --red-subtle: #2a0f0f;
+      color-scheme: dark;
+    }
+  }
+
+  :root[data-theme="dark"] {
+    --bg: #0f1117;
+    --surface: #181c27;
+    --border: #272d3d;
+    --fg: #e8eaf0;
+    --fg-muted: #8b91a8;
+    --accent: #4f8ef7;
+    --accent-subtle: #1a2340;
+    --green: #34d058;
+    --green-subtle: #0d2818;
+    --amber: #fbbf24;
+    --amber-subtle: #241a00;
+    --red: #f87171;
+    --red-subtle: #2a0f0f;
+    color-scheme: dark;
+  }
+
+  *, *::before, *::after { box-sizing: border-box; }
+
+  body {
+    margin: 0;
+    background: var(--bg);
+    color: var(--fg);
+    font-family: var(--font-sans);
+    font-size: 15px;
+    line-height: 1.6;
+    padding-left: max(16px, env(safe-area-inset-left, 0px));
+    padding-right: max(16px, env(safe-area-inset-right, 0px));
+    padding-block: 48px 64px;
+  }
+
+  .page { max-width: 860px; margin: 0 auto; display: flex; flex-direction: column; gap: 48px; }
+
+  /* Header */
+  .header { display: flex; flex-direction: column; gap: 8px; border-bottom: 1px solid var(--border); padding-bottom: 32px; }
+  .eyebrow { font-family: var(--font-mono); font-size: 11px; font-weight: 600; letter-spacing: 0.1em; text-transform: uppercase; color: var(--accent); }
+  h1 { margin: 0; font-size: clamp(1.5rem, 4vw, 2rem); font-weight: 600; line-height: 1.2; text-wrap: balance; }
+  .subtitle { color: var(--fg-muted); max-width: 60ch; margin: 0; }
+
+  /* Diagram */
+  .diagram-wrap { overflow-x: auto; }
+  figure { margin: 0; }
+  figcaption { font-size: 13px; color: var(--fg-muted); margin-top: 12px; font-style: italic; text-align: center; }
+
+  svg text { font-family: var(--font-sans); }
+
+  /* Walkthrough cards */
+  .section-label {
+    font-family: var(--font-mono);
+    font-size: 11px;
+    font-weight: 600;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--fg-muted);
+    margin-bottom: 16px;
+  }
+
+  .cards { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 16px; }
+
+  .card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 20px;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+  }
+
+  .card-step {
+    font-family: var(--font-mono);
+    font-size: 11px;
+    font-weight: 600;
+    color: var(--accent);
+    letter-spacing: 0.06em;
+  }
+
+  .card h3 { margin: 0; font-size: 14px; font-weight: 600; }
+  .card p { margin: 0; font-size: 13px; color: var(--fg-muted); line-height: 1.5; min-width: 0; }
+
+  .card code {
+    font-family: var(--font-mono);
+    font-size: 11px;
+    background: var(--accent-subtle);
+    color: var(--accent);
+    padding: 2px 6px;
+    border-radius: 3px;
+    display: inline-block;
+    margin-top: 4px;
+  }
+
+  /* Decision log table */
+  .table-wrap { overflow-x: auto; }
+
+  table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 13px;
+    min-width: 560px;
+  }
+
+  thead th {
+    text-align: left;
+    font-family: var(--font-mono);
+    font-size: 11px;
+    font-weight: 600;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    color: var(--fg-muted);
+    padding: 8px 12px;
+    border-bottom: 2px solid var(--border);
+  }
+
+  tbody td {
+    padding: 12px 12px;
+    border-bottom: 1px solid var(--border);
+    vertical-align: top;
+    min-width: 0;
+  }
+
+  tbody tr:last-child td { border-bottom: none; }
+
+  .tag {
+    display: inline-block;
+    font-family: var(--font-mono);
+    font-size: 10px;
+    font-weight: 600;
+    letter-spacing: 0.04em;
+    padding: 2px 7px;
+    border-radius: 99px;
+    text-transform: uppercase;
+  }
+
+  .tag-security { background: var(--red-subtle); color: var(--red); }
+  .tag-cost { background: var(--green-subtle); color: var(--green); }
+  .tag-ops { background: var(--amber-subtle); color: var(--amber); }
+  .tag-design { background: var(--accent-subtle); color: var(--accent); }
+</style>
+
+<div class="page">
+
+  <header class="header">
+    <p class="eyebrow">Module 02 — Security</p>
+    <h1>Least-Privilege IAM Architecture</h1>
+    <p class="subtitle">How to design AWS access so every identity — human or machine — holds only the permissions it needs, enforced at every layer from the org root to the resource policy.</p>
+  </header>
+
+  <!-- DIAGRAM -->
+  <div class="diagram-wrap">
+    <figure>
+      <svg viewBox="0 0 820 520" role="img" aria-label="Least-privilege IAM architecture showing an AWS Organization with SCP guardrails, a developer assuming a scoped IAM role, which grants access to three resources — S3, Lambda, and DynamoDB — each with their own resource policy"
+           style="max-width:100%;height:auto;display:block;">
+
+        <defs>
+          <!-- Arrow marker -->
+          <marker id="arr" markerWidth="8" markerHeight="8" refX="6" refY="3" orient="auto">
+            <polygon points="0 0, 7 3, 0 6" fill="currentColor" />
+          </marker>
+          <marker id="arr-green" markerWidth="8" markerHeight="8" refX="6" refY="3" orient="auto">
+            <polygon points="0 0, 7 3, 0 6" fill="#16a34a" />
+          </marker>
+          <marker id="arr-red" markerWidth="8" markerHeight="8" refX="6" refY="3" orient="auto">
+            <polygon points="0 0, 7 3, 0 6" fill="#dc2626" />
+          </marker>
+        </defs>
+
+        <!-- ── Org SCP boundary ── -->
+        <rect x="12" y="12" width="796" height="496" rx="12"
+              fill="none" stroke="#dc2626" stroke-width="1.5" stroke-dasharray="6 4" opacity="0.55"/>
+        <text x="28" y="32" font-size="11" font-weight="600" fill="#dc2626" opacity="0.8" letter-spacing="0.06em">AWS ORGANIZATION — SCP GUARDRAIL</text>
+        <text x="28" y="47" font-size="10" fill="#dc2626" opacity="0.6">Deny: disable CloudTrail · Deny: leave region · Deny: create root access keys</text>
+
+        <!-- ── Developer box ── -->
+        <rect x="40" y="80" width="140" height="72" rx="8"
+              fill="#eff4ff" stroke="#2563eb" stroke-width="1.5"/>
+        <text x="110" y="108" text-anchor="middle" font-size="12" font-weight="600" fill="#1a1d24">Developer</text>
+        <text x="110" y="124" text-anchor="middle" font-size="10" fill="#5a6075">IAM User (no inline</text>
+        <text x="110" y="137" text-anchor="middle" font-size="10" fill="#5a6075">policies, MFA required)</text>
+
+        <!-- ── Assume role arrow ── -->
+        <line x1="180" y1="116" x2="248" y2="116"
+              stroke="#2563eb" stroke-width="1.5" marker-end="url(#arr)"/>
+        <text x="214" y="109" text-anchor="middle" font-size="10" fill="#2563eb">sts:AssumeRole</text>
+
+        <!-- ── IAM Role box ── -->
+        <rect x="250" y="80" width="160" height="72" rx="8"
+              fill="#eff4ff" stroke="#2563eb" stroke-width="2"/>
+        <text x="330" y="104" text-anchor="middle" font-size="12" font-weight="600" fill="#1a1d24">IAM Role</text>
+        <text x="330" y="120" text-anchor="middle" font-size="10" fill="#5a6075">AppDeployRole</text>
+        <text x="330" y="134" text-anchor="middle" font-size="10" fill="#5a6075">Trust policy: only this user</text>
+        <text x="330" y="148" text-anchor="middle" font-size="10" fill="#5a6075">Session: 1 hour max</text>
+
+        <!-- ── Permission boundary badge ── -->
+        <rect x="250" y="165" width="160" height="28" rx="5"
+              fill="#fef2f2" stroke="#dc2626" stroke-width="1" stroke-dasharray="4 3"/>
+        <text x="330" y="183" text-anchor="middle" font-size="10" font-weight="600" fill="#dc2626">Permission Boundary attached</text>
+
+        <!-- ── Arrows from role to resources ── -->
+        <!-- to S3 -->
+        <line x1="330" y1="152" x2="330" y2="248"
+              stroke="#16a34a" stroke-width="1.5" marker-end="url(#arr-green)"/>
+
+        <!-- to Lambda -->
+        <line x1="410" y1="116" x2="530" y2="116"
+              stroke="#16a34a" stroke-width="1.5" marker-end="url(#arr-green)"/>
+
+        <!-- to DynamoDB (diagonal) -->
+        <line x1="400" y1="152" x2="618" y2="248"
+              stroke="#16a34a" stroke-width="1.5" marker-end="url(#arr-green)"/>
+
+        <!-- ── S3 bucket ── -->
+        <rect x="220" y="250" width="220" height="90" rx="8"
+              fill="#f0fdf4" stroke="#16a34a" stroke-width="1.5"/>
+        <text x="330" y="274" text-anchor="middle" font-size="12" font-weight="600" fill="#1a1d24">S3 Bucket</text>
+        <text x="330" y="290" text-anchor="middle" font-size="10" fill="#5a6075">eli-app-artifacts</text>
+        <text x="330" y="306" text-anchor="middle" font-size="10" fill="#5a6075">Resource policy: allow only</text>
+        <text x="330" y="319" text-anchor="middle" font-size="10" fill="#5a6075">AppDeployRole · s3:GetObject</text>
+        <text x="330" y="333" text-anchor="middle" font-size="10" font-weight="600" fill="#dc2626">Deny: s3:DeleteObject (all)</text>
+
+        <!-- ── Lambda function ── -->
+        <rect x="530" y="80" width="220" height="72" rx="8"
+              fill="#f0fdf4" stroke="#16a34a" stroke-width="1.5"/>
+        <text x="640" y="104" text-anchor="middle" font-size="12" font-weight="600" fill="#1a1d24">Lambda Function</text>
+        <text x="640" y="120" text-anchor="middle" font-size="10" fill="#5a6075">Execution role: separate</text>
+        <text x="640" y="134" text-anchor="middle" font-size="10" fill="#5a6075">LambdaExecRole (least-priv)</text>
+        <text x="640" y="148" text-anchor="middle" font-size="10" fill="#5a6075">lambda:InvokeFunction only</text>
+
+        <!-- ── DynamoDB table ── -->
+        <rect x="530" y="250" width="220" height="90" rx="8"
+              fill="#f0fdf4" stroke="#16a34a" stroke-width="1.5"/>
+        <text x="640" y="274" text-anchor="middle" font-size="12" font-weight="600" fill="#1a1d24">DynamoDB Table</text>
+        <text x="640" y="290" text-anchor="middle" font-size="10" fill="#5a6075">orders-table</text>
+        <text x="640" y="306" text-anchor="middle" font-size="10" fill="#5a6075">Resource policy: allow only</text>
+        <text x="640" y="319" text-anchor="middle" font-size="10" fill="#5a6075">AppDeployRole · dynamodb:Query</text>
+        <text x="640" y="333" text-anchor="middle" font-size="10" font-weight="600" fill="#dc2626">Deny: DeleteTable (org-wide)</text>
+
+        <!-- ── CloudTrail audit box ── -->
+        <rect x="220" y="390" width="340" height="56" rx="8"
+              fill="#fffbeb" stroke="#d97706" stroke-width="1.5"/>
+        <text x="390" y="414" text-anchor="middle" font-size="12" font-weight="600" fill="#1a1d24">CloudTrail — Audit Log</text>
+        <text x="390" y="430" text-anchor="middle" font-size="10" fill="#5a6075">All API calls logged · Immutable S3 bucket · Alerting via CloudWatch</text>
+        <text x="390" y="444" text-anchor="middle" font-size="10" fill="#5a6075">SCP blocks CloudTrail disable at org level</text>
+
+        <!-- audit arrows -->
+        <line x1="330" y1="340" x2="340" y2="388"
+              stroke="#d97706" stroke-width="1" stroke-dasharray="4 3" marker-end="url(#arr)"/>
+        <line x1="640" y1="340" x2="440" y2="388"
+              stroke="#d97706" stroke-width="1" stroke-dasharray="4 3" marker-end="url(#arr)"/>
+
+        <!-- ── Legend ── -->
+        <g transform="translate(40, 390)">
+          <text font-size="10" font-weight="600" fill="currentColor" opacity="0.5" letter-spacing="0.06em">LEGEND</text>
+          <line x1="0" y1="16" x2="24" y2="16" stroke="#2563eb" stroke-width="1.5" marker-end="url(#arr)"/>
+          <text x="30" y="20" font-size="10" fill="currentColor" opacity="0.7">Identity flow</text>
+          <line x1="0" y1="34" x2="24" y2="34" stroke="#16a34a" stroke-width="1.5" marker-end="url(#arr-green)"/>
+          <text x="30" y="38" font-size="10" fill="currentColor" opacity="0.7">Allowed access</text>
+          <line x1="0" y1="52" x2="24" y2="52" stroke="#dc2626" stroke-width="1.5" stroke-dasharray="4 3"/>
+          <text x="30" y="56" font-size="10" fill="currentColor" opacity="0.7">Explicit deny / boundary</text>
+          <line x1="0" y1="70" x2="24" y2="70" stroke="#d97706" stroke-width="1" stroke-dasharray="4 3" marker-end="url(#arr)"/>
+          <text x="30" y="74" font-size="10" fill="currentColor" opacity="0.7">Audit trail</text>
+        </g>
+
+      </svg>
+      <figcaption>Every access path passes through a scoped IAM Role — no direct user credentials, no wildcard policies, no root activity.</figcaption>
+    </figure>
+  </div>
+
+  <!-- WALKTHROUGH CARDS -->
+  <section>
+    <p class="section-label">How it works — step by step</p>
+    <div class="cards">
+      <div class="card">
+        <span class="card-step">Step 01</span>
+        <h3>SCP sets the ceiling</h3>
+        <p>Service Control Policies at the org root deny the most dangerous actions for every account — disabling CloudTrail, creating root access keys, leaving the approved region. Even an account admin can't override these.</p>
+        <code>Deny: cloudtrail:StopLogging</code>
+      </div>
+      <div class="card">
+        <span class="card-step">Step 02</span>
+        <h3>Developer assumes a role</h3>
+        <p>No long-lived IAM user access keys. The developer calls <code>sts:AssumeRole</code> to get a temporary credential scoped to AppDeployRole. MFA is required. The session expires in one hour.</p>
+        <code>sts:AssumeRole + MFA</code>
+      </div>
+      <div class="card">
+        <span class="card-step">Step 03</span>
+        <h3>Permission boundary caps the role</h3>
+        <p>A permission boundary is attached to AppDeployRole. Even if an admin accidentally adds a wildcard policy to the role later, the boundary caps what it can actually do. Two locks instead of one.</p>
+        <code>iam:PutRolePermissionsBoundary</code>
+      </div>
+      <div class="card">
+        <span class="card-step">Step 04</span>
+        <h3>Resources enforce their own policies</h3>
+        <p>Each resource — S3, Lambda, DynamoDB — has its own resource-based policy allowing only AppDeployRole, only the specific actions needed. If the role is somehow compromised, blast radius is limited to what each resource explicitly allows.</p>
+        <code>s3:GetObject · dynamodb:Query</code>
+      </div>
+      <div class="card">
+        <span class="card-step">Step 05</span>
+        <h3>Lambda has its own execution role</h3>
+        <p>The function doesn't inherit the developer's role. It runs under LambdaExecRole — a separate least-privilege role created just for what that function needs at runtime. Roles are never shared between workloads.</p>
+        <code>Separate role per workload</code>
+      </div>
+      <div class="card">
+        <span class="card-step">Step 06</span>
+        <h3>CloudTrail logs everything</h3>
+        <p>Every API call is logged to an immutable S3 bucket. CloudWatch Alarms fire on suspicious patterns — root login, console sign-in without MFA, policy changes. The SCP prevents anyone from turning CloudTrail off.</p>
+        <code>cloudtrail:CreateTrail</code>
+      </div>
+    </div>
+  </section>
+
+  <!-- DECISION LOG TABLE -->
+  <section>
+    <p class="section-label">Decision log</p>
+    <div class="table-wrap">
+      <table>
+        <thead>
+          <tr>
+            <th>Decision</th>
+            <th>Why</th>
+            <th>Trade-off</th>
+            <th>Tag</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td><strong>No long-lived IAM user keys</strong></td>
+            <td>Long-lived keys are the #1 cause of AWS breaches. Temporary credentials via STS expire automatically — no manual rotation needed.</td>
+            <td>Developers need to re-authenticate hourly, adding minor friction.</td>
+            <td><span class="tag tag-security">Security</span></td>
+          </tr>
+          <tr>
+            <td><strong>Permission boundaries on all roles</strong></td>
+            <td>A second guardrail independent of the identity policy. Even a misconfigured policy escalation can't exceed the boundary.</td>
+            <td>More IAM objects to manage; boundaries must be updated when the role legitimately needs new permissions.</td>
+            <td><span class="tag tag-security">Security</span></td>
+          </tr>
+          <tr>
+            <td><strong>Separate execution role per Lambda</strong></td>
+            <td>Shared roles mean a compromised function can affect every other workload using that role. Isolation limits blast radius.</td>
+            <td>More roles to maintain at scale; can be managed with IaC (CDK/Terraform).</td>
+            <td><span class="tag tag-design">Design</span></td>
+          </tr>
+          <tr>
+            <td><strong>SCP denies CloudTrail disable</strong></td>
+            <td>An attacker's first move after getting in is often to disable logging. Making it org-level undeniable removes that option entirely.</td>
+            <td>No trade-off — there is no legitimate reason to disable CloudTrail in production.</td>
+            <td><span class="tag tag-security">Security</span></td>
+          </tr>
+          <tr>
+            <td><strong>Resource policies on S3 and DynamoDB</strong></td>
+            <td>Defense in depth — even if IAM is misconfigured, the resource won't serve data to an unexpected principal. Two independent checks.</td>
+            <td>Policy changes must happen in two places (IAM + resource) when access requirements change.</td>
+            <td><span class="tag tag-ops">Ops</span></td>
+          </tr>
+          <tr>
+            <td><strong>Explicit Deny on s3:DeleteObject</strong></td>
+            <td>Accidental deletions are irreversible without versioning. An explicit deny blocks it entirely for all principals, including future admins.</td>
+            <td>Cleanup operations require a deliberate policy change — intentional friction.</td>
+            <td><span class="tag tag-security">Security</span></td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </section>
+
+</div>
+
+</body></html>
