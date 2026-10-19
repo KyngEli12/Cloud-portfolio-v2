@@ -1,0 +1,673 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Eli — Cloud &amp; DevOps Engineer</title>
+<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Sans:ital,wght@0,300;0,400;0,500;0,600;1,300&display=swap" rel="stylesheet">
+
+<!--
+╔══════════════════════════════════════════════════════════════╗
+║  EDIT YOUR INFO HERE — touch nothing below the closing tag  ║
+╚══════════════════════════════════════════════════════════════╝
+-->
+<script>
+const DATA = {
+  name: "Eli",
+  title: "Cloud & DevOps Engineer",
+  location: "Austin, TX",
+  bio: "Self-taught engineer with production experience across cloud infrastructure, DevOps pipelines, and AWS architecture. Currently building a hands-on portfolio across nine core cloud domains to close the gap to mid-level architect.",
+  certifications: [
+    { name: "AWS Solutions Architect Associate", code: "SAA-C03", status: "active" }
+  ],
+  github: "https://github.com/KyngEli12",
+  linkedin: "",
+  email: "",
+
+  // STATUS: "locked" | "in-progress" | "complete"
+  modules: [
+    {
+      domain: "Databases",
+      status: "complete",
+      duration: "3–4 wks",
+      focus: "Multi-engine data tier — Aurora, DynamoDB, ElastiCache. Zero-downtime migration with AWS DMS.",
+      skills: ["Aurora PostgreSQL", "DynamoDB", "ElastiCache", "RDS Multi-AZ", "AWS DMS", "Cache-Aside"],
+      projects: [
+        { name: "Multi-Engine E-Commerce Data Tier", repo: "" },
+        { name: "Zero-Downtime DB Migration", repo: "" }
+      ]
+    },
+    {
+      domain: "Security",
+      status: "complete",
+      duration: "3–4 wks",
+      focus: "Defense-in-depth — IAM, KMS, GuardDuty, WAF. Automated threat response pipeline.",
+      skills: ["IAM & SCPs", "KMS", "Secrets Manager", "GuardDuty", "Security Hub", "WAF + Shield"],
+      projects: [
+        { name: "Least-Privilege IAM Architecture", repo: "" },
+        { name: "Automated Threat Response Pipeline", repo: "" }
+      ]
+    },
+    {
+      domain: "Compute",
+      status: "in-progress",
+      duration: "2–3 wks",
+      focus: "Cost-optimized compute — Spot fleets, Lambda, Step Functions, Auto Scaling.",
+      skills: ["Auto Scaling Groups", "Spot Instances", "Lambda", "Step Functions", "Graviton", "Compute Optimizer"],
+      projects: [
+        { name: "Hybrid Compute Architecture with Spot", repo: "" },
+        { name: "Serverless Orchestration Pipeline", repo: "" }
+      ]
+    },
+    {
+      domain: "Federation",
+      status: "locked",
+      duration: "2–3 wks",
+      focus: "Enterprise SSO — IAM Identity Center, SAML 2.0, Cognito, external IdP integration.",
+      skills: ["IAM Identity Center", "SAML 2.0", "OIDC / OAuth 2.0", "Cognito", "Active Directory"],
+      projects: [
+        { name: "Enterprise SSO with Okta + IAM Identity Center", repo: "" },
+        { name: "Web App with Federated Social Login", repo: "" }
+      ]
+    },
+    {
+      domain: "Zero Trust",
+      status: "locked",
+      duration: "3 wks",
+      focus: "Never trust, always verify — VPC Lattice, Verified Access, mTLS, service-level auth.",
+      skills: ["VPC Lattice", "AWS Verified Access", "PrivateLink", "mTLS", "Network Firewall"],
+      projects: [
+        { name: "Zero Trust Microservice Mesh", repo: "" },
+        { name: "Verified Access for Internal Tooling", repo: "" }
+      ]
+    },
+    {
+      domain: "High Availability",
+      status: "locked",
+      duration: "3–4 wks",
+      focus: "99.99% uptime design — multi-region active-active, Route 53 failover, chaos engineering.",
+      skills: ["Route 53 Health Checks", "Global Accelerator", "Aurora Global DB", "AWS FIS", "SLA Calc"],
+      projects: [
+        { name: "Multi-Region Active-Active App", repo: "" },
+        { name: "Chaos Engineering with AWS FIS", repo: "" }
+      ]
+    },
+    {
+      domain: "Disaster Recovery",
+      status: "locked",
+      duration: "3 wks",
+      focus: "Four DR strategies benchmarked from Backup & Restore to Multi-Site Active/Active.",
+      skills: ["RTO & RPO", "AWS Backup", "Elastic DRS", "Pilot Light", "Cross-Region Replication"],
+      projects: [
+        { name: "Four-Strategy DR Comparison Lab", repo: "" },
+        { name: "Automated DR Drill with Elastic DRS", repo: "" }
+      ]
+    },
+    {
+      domain: "Containerization",
+      status: "locked",
+      duration: "4–5 wks",
+      focus: "Production containers — ECS Fargate, EKS, GitOps via ArgoCD, image security scanning.",
+      skills: ["Docker", "ECS Fargate", "EKS", "ECR", "App Mesh", "Helm", "ArgoCD", "Trivy"],
+      projects: [
+        { name: "Microservices Platform on ECS Fargate", repo: "" },
+        { name: "EKS GitOps Pipeline", repo: "" }
+      ]
+    },
+    {
+      domain: "Cloud Migrations",
+      status: "locked",
+      duration: "3–4 wks",
+      focus: "7 Rs framework — discovery, TCO analysis, wave planning, and landing zone design.",
+      skills: ["7 Rs Framework", "Migration Hub", "App Discovery", "DMS", "TCO Calculator"],
+      projects: [
+        { name: "On-Premises to AWS Migration Sim", repo: "" },
+        { name: "Migration Business Case & Wave Plan", repo: "" }
+      ]
+    }
+  ]
+};
+</script>
+<!--  END EDITABLE SECTION  -->
+
+<style>
+@media (prefers-reduced-motion: reduce) { *, *::before, *::after { animation-duration: 0.01ms !important; transition-duration: 0.01ms !important; } }
+
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+:root {
+  --black: #000000;
+  --surface: #0F0F0F;
+  --rule: #1E1E1E;
+  --rule-mid: #2A2A2A;
+  --violet: #7B61FF;
+  --violet-dim: #7B61FF1A;
+  --text: #F2F2F0;
+  --text-mid: #888884;
+  --text-dim: #444440;
+  --green: #3ECF8E;
+  --amber: #F0A500;
+}
+
+html { scroll-behavior: smooth; }
+
+body {
+  background: var(--black);
+  color: var(--text);
+  font-family: 'DM Sans', sans-serif;
+  font-size: 15px;
+  line-height: 1.6;
+  -webkit-font-smoothing: antialiased;
+  overflow-x: hidden;
+}
+
+a { color: inherit; text-decoration: none; }
+a:focus-visible { outline: 2px solid var(--violet); outline-offset: 3px; border-radius: 2px; }
+
+/* ── PAGE ── */
+.page { max-width: 1080px; margin: 0 auto; padding: 0 32px; }
+
+/* ── NAV ── */
+nav {
+  padding: 24px 0;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  border-bottom: 1px solid var(--rule);
+}
+
+.nav-mark {
+  font-family: 'Bebas Neue', sans-serif;
+  font-size: 22px;
+  letter-spacing: 0.04em;
+  color: var(--violet);
+}
+
+.nav-links { display: flex; gap: 28px; }
+
+.nav-link {
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--text-mid);
+  transition: color 0.15s;
+}
+
+.nav-link:hover { color: var(--text); }
+
+/* ── HERO ── */
+.hero {
+  padding: 72px 0 0;
+  opacity: 0;
+  animation: fadeUp 0.9s cubic-bezier(0.22, 1, 0.36, 1) 0.1s forwards;
+}
+
+@keyframes fadeUp {
+  from { opacity: 0; transform: translateY(20px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+.hero-name {
+  font-family: 'Bebas Neue', sans-serif;
+  font-size: clamp(96px, 18vw, 200px);
+  line-height: 0.88;
+  letter-spacing: 0.01em;
+  color: var(--text);
+  margin-bottom: 32px;
+  /* Optical left-align correction for Bebas */
+  margin-left: -4px;
+}
+
+.hero-meta {
+  display: flex;
+  align-items: flex-start;
+  gap: 48px;
+  padding: 28px 0;
+  border-top: 1px solid var(--rule);
+  border-bottom: 1px solid var(--rule);
+  margin-bottom: 64px;
+  flex-wrap: wrap;
+}
+
+.hero-meta-col { display: flex; flex-direction: column; gap: 4px; }
+
+.meta-label { font-size: 11px; font-weight: 500; color: var(--text-dim); text-transform: none; letter-spacing: 0; }
+.meta-value { font-size: 14px; font-weight: 400; color: var(--text); }
+
+.meta-divider { width: 1px; background: var(--rule); align-self: stretch; }
+
+.hero-bio {
+  max-width: 520px;
+  flex: 1;
+  font-size: 15px;
+  line-height: 1.75;
+  color: var(--text-mid);
+  font-weight: 300;
+}
+
+/* ── PROGRESS BAR ── */
+.progress-section {
+  margin-bottom: 80px;
+  display: grid;
+  grid-template-columns: 1fr 1fr 1fr;
+  gap: 0;
+  border: 1px solid var(--rule);
+}
+
+.progress-cell {
+  padding: 24px 28px;
+  border-right: 1px solid var(--rule);
+}
+
+.progress-cell:last-child { border-right: none; }
+
+.progress-cell-value {
+  font-family: 'Bebas Neue', sans-serif;
+  font-size: 48px;
+  line-height: 1;
+  color: var(--text);
+  margin-bottom: 4px;
+}
+
+.progress-cell-value span { color: var(--text-dim); font-size: 32px; }
+
+.progress-cell-label { font-size: 12px; color: var(--text-mid); margin-bottom: 16px; }
+
+.mini-bar { height: 2px; background: var(--rule-mid); border-radius: 1px; }
+.mini-bar-fill { height: 100%; background: var(--violet); border-radius: 1px; transition: width 1s cubic-bezier(0.4, 0, 0.2, 1) 0.5s; }
+
+/* ── CERTS ── */
+.certs-row {
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+  margin-bottom: 80px;
+}
+
+.cert-item {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 12px 18px;
+  border: 1px solid var(--rule-mid);
+  font-size: 13px;
+  color: var(--text-mid);
+}
+
+.cert-item.active { border-color: var(--violet); color: var(--text); }
+.cert-dot { width: 6px; height: 6px; border-radius: 50%; background: var(--violet); flex-shrink: 0; }
+.cert-code { color: var(--text-dim); font-size: 11px; margin-left: 4px; }
+
+/* ── SECTION TITLE ── */
+.section-label {
+  font-size: 11px;
+  font-weight: 500;
+  color: var(--text-dim);
+  margin-bottom: 20px;
+  padding-bottom: 12px;
+  border-bottom: 1px solid var(--rule);
+}
+
+/* ── SKILLS ── */
+.skills-section { margin-bottom: 80px; }
+
+.skills-flow {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px 10px;
+  line-height: 2.2;
+}
+
+.skill-word {
+  font-size: 14px;
+  font-weight: 300;
+  color: var(--text-dim);
+  transition: color 0.2s;
+}
+
+.skill-word.earned { color: var(--text); }
+.skill-word.earned:hover { color: var(--violet); cursor: default; }
+
+.skill-sep { color: var(--rule-mid); font-size: 12px; }
+
+/* ── MODULES ── */
+.modules-section { margin-bottom: 80px; }
+
+.module-row {
+  border-bottom: 1px solid var(--rule);
+  display: grid;
+  grid-template-columns: 180px 1fr 140px;
+  gap: 0;
+  transition: background 0.15s;
+}
+
+.module-row:first-of-type { border-top: 1px solid var(--rule); }
+.module-row:hover { background: var(--surface); }
+.module-row.locked { opacity: 0.4; }
+
+.module-col {
+  padding: 24px 0;
+}
+
+.module-col + .module-col { padding-left: 32px; }
+.module-col:last-child { padding-left: 0; text-align: right; }
+
+.module-domain {
+  font-family: 'Bebas Neue', sans-serif;
+  font-size: 22px;
+  letter-spacing: 0.02em;
+  color: var(--text);
+  margin-bottom: 2px;
+  line-height: 1;
+}
+
+.module-duration { font-size: 12px; color: var(--text-dim); }
+
+.module-focus {
+  font-size: 13px;
+  color: var(--text-mid);
+  font-weight: 300;
+  line-height: 1.6;
+  margin-bottom: 12px;
+}
+
+.module-projects { display: flex; flex-direction: column; gap: 5px; }
+
+.module-project {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 12px;
+  color: var(--text-dim);
+}
+
+.proj-check {
+  width: 12px;
+  height: 12px;
+  border: 1px solid var(--rule-mid);
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 8px;
+}
+
+.proj-check.done { background: var(--violet); border-color: var(--violet); color: white; }
+.proj-name { color: var(--text-dim); }
+.proj-name.done { color: var(--text-mid); }
+
+.proj-link {
+  font-size: 10px;
+  color: var(--violet);
+  opacity: 0.7;
+  margin-left: 4px;
+}
+
+.proj-link:hover { opacity: 1; }
+
+.status-tag {
+  display: inline-block;
+  font-size: 11px;
+  font-weight: 500;
+  padding: 4px 10px;
+  border: 1px solid;
+  letter-spacing: 0.02em;
+}
+
+.status-tag.complete { border-color: var(--green); color: var(--green); }
+.status-tag.in-progress { border-color: var(--amber); color: var(--amber); }
+.status-tag.locked { border-color: var(--text-dim); color: var(--text-dim); }
+
+/* ── CONTACT / FOOTER ── */
+.footer-section {
+  padding: 48px 0;
+  border-top: 1px solid var(--rule);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 20px;
+}
+
+.footer-left {
+  font-family: 'Bebas Neue', sans-serif;
+  font-size: 32px;
+  letter-spacing: 0.02em;
+  color: var(--text-mid);
+}
+
+.footer-links { display: flex; gap: 24px; flex-wrap: wrap; }
+
+.footer-link {
+  font-size: 13px;
+  color: var(--text-mid);
+  border-bottom: 1px solid var(--rule-mid);
+  padding-bottom: 2px;
+  transition: color 0.15s, border-color 0.15s;
+}
+
+.footer-link:hover { color: var(--text); border-color: var(--violet); }
+
+.footer-copy {
+  width: 100%;
+  font-size: 11px;
+  color: var(--text-dim);
+  margin-top: 8px;
+}
+
+/* ── RESPONSIVE ── */
+@media (max-width: 720px) {
+  .page { padding: 0 20px; }
+  .hero-meta { gap: 24px; }
+  .meta-divider { display: none; }
+  .progress-section { grid-template-columns: 1fr; }
+  .progress-cell { border-right: none; border-bottom: 1px solid var(--rule); }
+  .progress-cell:last-child { border-bottom: none; }
+  .module-row { grid-template-columns: 1fr; }
+  .module-col + .module-col { padding-left: 0; }
+  .module-col:last-child { text-align: left; }
+  nav .nav-links { display: none; }
+}
+</style>
+</head>
+<body>
+
+<div class="page">
+  <nav>
+    <div class="nav-mark" id="nav-mark"></div>
+    <div class="nav-links" id="nav-links"></div>
+  </nav>
+
+  <section class="hero" id="hero-section">
+    <div class="hero-name" id="hero-name"></div>
+    <div class="hero-meta" id="hero-meta"></div>
+  </section>
+
+  <div id="progress-section" class="progress-section"></div>
+
+  <div style="margin-top: 64px;" id="certs-section"></div>
+
+  <section class="skills-section" id="skills-section"></section>
+
+  <section class="modules-section" id="modules-section"></section>
+
+  <footer class="footer-section" id="footer-section"></footer>
+</div>
+
+<script>
+// ── COMPUTED ──
+function getStats() {
+  const complete = DATA.modules.filter(m => m.status === "complete").length;
+  const inProg   = DATA.modules.filter(m => m.status === "in-progress").length;
+  const allSkills = [...new Set(DATA.modules.flatMap(m => m.skills))];
+  const earnedSkills = [...new Set(
+    DATA.modules.filter(m => m.status === "complete").flatMap(m => m.skills)
+  )];
+  const projects = DATA.modules.reduce((acc, m) => acc + (m.status === "complete" ? 2 : 0), 0);
+  return { complete, inProg, allSkills, earnedSkills, projects, total: DATA.modules.length };
+}
+
+// ── NAV ──
+function renderNav() {
+  document.getElementById('nav-mark').textContent = DATA.name.charAt(0).toUpperCase();
+  const links = [];
+  if (DATA.github)   links.push(`<a href="${DATA.github}" class="nav-link" target="_blank">GitHub</a>`);
+  if (DATA.linkedin) links.push(`<a href="${DATA.linkedin}" class="nav-link" target="_blank">LinkedIn</a>`);
+  if (DATA.email)    links.push(`<a href="mailto:${DATA.email}" class="nav-link">Contact</a>`);
+  document.getElementById('nav-links').innerHTML = links.join('');
+}
+
+// ── HERO ──
+function renderHero() {
+  document.getElementById('hero-name').textContent = DATA.name;
+
+  const cols = [
+    { label: "Role", value: DATA.title },
+    { label: "Location", value: DATA.location },
+    { label: "Bio", value: DATA.bio, wide: true }
+  ];
+
+  let html = '';
+  cols.forEach((c, i) => {
+    if (i > 0 && !c.wide) html += `<div class="meta-divider"></div>`;
+    html += `<div class="hero-meta-col" style="${c.wide ? 'flex:1;min-width:240px' : ''}">
+      <span class="meta-label">${c.label}</span>
+      <span class="meta-value" style="${c.wide ? 'color:var(--text-mid);font-weight:300;font-size:14px;line-height:1.75' : ''}">${c.value}</span>
+    </div>`;
+  });
+
+  document.getElementById('hero-meta').innerHTML = html;
+}
+
+// ── PROGRESS ──
+function renderProgress() {
+  const s = getStats();
+  const pctDomains  = Math.round((s.complete / s.total) * 100);
+  const pctProjects = Math.round((s.projects / (s.total * 2)) * 100);
+  const pctSkills   = Math.round((s.earnedSkills.length / s.allSkills.length) * 100);
+
+  document.getElementById('progress-section').innerHTML = `
+    <div class="progress-cell">
+      <div class="progress-cell-value">${s.complete}<span>/${s.total}</span></div>
+      <div class="progress-cell-label">Domains complete</div>
+      <div class="mini-bar"><div class="mini-bar-fill" style="width:0%" data-pct="${pctDomains}"></div></div>
+    </div>
+    <div class="progress-cell">
+      <div class="progress-cell-value">${s.projects}<span>/18</span></div>
+      <div class="progress-cell-label">Projects built</div>
+      <div class="mini-bar"><div class="mini-bar-fill" style="width:0%" data-pct="${pctProjects}"></div></div>
+    </div>
+    <div class="progress-cell">
+      <div class="progress-cell-value">${s.earnedSkills.length}<span>/${s.allSkills.length}</span></div>
+      <div class="progress-cell-label">Skills acquired</div>
+      <div class="mini-bar"><div class="mini-bar-fill" style="width:0%" data-pct="${pctSkills}"></div></div>
+    </div>
+  `;
+
+  // Animate bars after paint
+  requestAnimationFrame(() => {
+    setTimeout(() => {
+      document.querySelectorAll('.mini-bar-fill').forEach(el => {
+        el.style.width = el.dataset.pct + '%';
+      });
+    }, 300);
+  });
+}
+
+// ── CERTS ──
+function renderCerts() {
+  const badges = DATA.certifications.map(c => `
+    <div class="cert-item ${c.status}">
+      ${c.status === 'active' ? '<span class="cert-dot"></span>' : ''}
+      ${c.name}
+      <span class="cert-code">${c.code}</span>
+    </div>
+  `).join('');
+  document.getElementById('certs-section').innerHTML = `
+    <div class="section-label">Certifications</div>
+    <div class="certs-row">${badges}</div>
+  `;
+}
+
+// ── SKILLS ──
+function renderSkills() {
+  const s = getStats();
+  const allSkills = [...new Set(DATA.modules.flatMap(m => m.skills))];
+  const earned = new Set(s.earnedSkills);
+
+  const words = allSkills.map((sk, i) => {
+    const isEarned = earned.has(sk);
+    const sep = i < allSkills.length - 1 ? '<span class="skill-sep">/</span>' : '';
+    return `<span class="skill-word ${isEarned ? 'earned' : ''}">${sk}</span>${sep}`;
+  }).join(' ');
+
+  document.getElementById('skills-section').innerHTML = `
+    <div class="section-label">Skills — ${s.earnedSkills.length} of ${allSkills.length} acquired</div>
+    <div class="skills-flow">${words}</div>
+  `;
+}
+
+// ── MODULES ──
+function renderModules() {
+  const rows = DATA.modules.map(m => {
+    const statusLabel = m.status === 'complete' ? 'Complete' : m.status === 'in-progress' ? 'In progress' : 'Upcoming';
+    const isDone = m.status === 'complete';
+
+    const projs = m.projects.map(p => {
+      const hasRepo = p.repo && p.repo.length > 0;
+      const repoLink = hasRepo ? `<a href="${p.repo}" class="proj-link" target="_blank">repo</a>` : '';
+      return `
+        <div class="module-project">
+          <div class="proj-check ${isDone ? 'done' : ''}"></div>
+          <span class="proj-name ${isDone ? 'done' : ''}">${p.name}</span>${repoLink}
+        </div>`;
+    }).join('');
+
+    return `
+      <div class="module-row ${m.status}">
+        <div class="module-col">
+          <div class="module-domain">${m.domain}</div>
+          <div class="module-duration">${m.duration}</div>
+        </div>
+        <div class="module-col">
+          <div class="module-focus">${m.focus}</div>
+          <div class="module-projects">${projs}</div>
+        </div>
+        <div class="module-col">
+          <span class="status-tag ${m.status}">${statusLabel}</span>
+        </div>
+      </div>`;
+  }).join('');
+
+  document.getElementById('modules-section').innerHTML = `
+    <div class="section-label">Project modules</div>
+    ${rows}
+  `;
+}
+
+// ── FOOTER ──
+function renderFooter() {
+  const links = [];
+  if (DATA.github)   links.push(`<a href="${DATA.github}" class="footer-link" target="_blank">GitHub</a>`);
+  if (DATA.linkedin) links.push(`<a href="${DATA.linkedin}" class="footer-link" target="_blank">LinkedIn</a>`);
+  if (DATA.email)    links.push(`<a href="mailto:${DATA.email}" class="footer-link">Email</a>`);
+
+  const today = new Date().toLocaleDateString('en-US', { month: 'long', year: 'numeric' });
+
+  document.getElementById('footer-section').innerHTML = `
+    <div class="footer-left">Get in touch</div>
+    <div class="footer-links">${links.length ? links.join('') : '<span style="color:var(--text-dim);font-size:13px;">Add your links in the DATA section</span>'}</div>
+    <div class="footer-copy">© ${new Date().getFullYear()} ${DATA.name} &nbsp;·&nbsp; Cloud & DevOps Engineer &nbsp;·&nbsp; Updated ${today}</div>
+  `;
+}
+
+// ── INIT ──
+renderNav();
+renderHero();
+renderProgress();
+renderCerts();
+renderSkills();
+renderModules();
+renderFooter();
+</script>
+</body>
+</html>
